@@ -20,7 +20,7 @@ app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: false })); // support encoded bodies
 
 // Set session cookie
-app.use(session({ secret: 'anything', resave: true, saveUninitialized: true }));
+app.use(session({ proxy: true, secret: 'anything', resave: true, saveUninitialized: true }));
 
 // CORS
 app.use(cors({
