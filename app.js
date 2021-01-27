@@ -23,7 +23,7 @@ app.use(bodyParser.urlencoded({ extended: false })); // support encoded bodies
 app.enable('trust proxy');
 
 // Set session cookie
-app.use(session({ store: new MongoStore({ url: require('./config/keys').MongoURI }), proxy: true, secret: 'anything', resave: true, saveUninitialized: true }));
+app.use(session({ store: new MongoStore({ url: require('./config/keys').MongoURI }), proxy: true, secret: 'anything', resave: false, saveUninitialized: false }));
 
 // CORS
 app.use(cors({
