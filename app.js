@@ -6,6 +6,7 @@ const cors = require('cors');
 const session = require('express-session');
 const passport = require('passport');
 const mongoose = require('mongoose');
+const MongoStore = require('connect-mongo')(session);
 require('dotenv').config()
 
 require('./config/passport')(passport);
@@ -19,8 +20,10 @@ mongoose.connect(db, { useNewUrlParser: true, useUnifiedTopology: true })
 app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: false })); // support encoded bodies
 
+app.enable('trust proxy');
+
 // Set session cookie
-app.use(session({ proxy: true, secret: 'anything', resave: true, saveUninitialized: true }));
+app.use(session({ store: new MongoStore({ url: require('./config/keys').MongoURI }), proxy: true, secret: 'anything', resave: true, saveUninitialized: true }));
 
 // CORS
 app.use(cors({
