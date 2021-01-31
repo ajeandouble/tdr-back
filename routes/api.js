@@ -63,7 +63,9 @@ router.get('/getMatches', async (req, res) => {
         if (!profile) {
             throw new Error('Can\'t find active user profile');
         }
-        res.status(201).json({success: true, message: 'Matches successfully retrieved', data: profile.matches})
+        const matches = await UserProfileModel.find({user_id: { '$in': profile.matches }});
+
+        res.status(201).json({success: true, message: 'Matches successfully retrieved', data: matches})
     }
     catch (err) {
         const message = err.toString();
