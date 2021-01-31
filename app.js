@@ -3,13 +3,18 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const session = require('express-session');
 const passport = require('passport');
 const mongoose = require('mongoose');
-const MongoStore = require('connect-mongo')(session);
+const logger = require('logger').createLogger();
 require('dotenv').config()
-
+const keys = require('./config/keys');
 require('./config/passport')(passport);
+const { session, sessionStore } = require('./config/session');
+
+// Websockets
+require('./chat');
+
+
 
 // DB Config
 const db = require('./config/keys').MongoURI;
@@ -20,10 +25,10 @@ mongoose.connect(db, { useNewUrlParser: true, useUnifiedTopology: true })
 app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: false })); // support encoded bodies
 
-app.enable('trust proxy');
+app.enable('trust proxy'); // For Heroku?
 
-// Set session cookie
-app.use(session({ store: new MongoStore({ url: require('./config/keys').MongoURI }), proxy: true, secret: 'anything', resave: false, saveUninitialized: false }));
+// Session
+app.use(session({ store: sessionStore, proxy: true, secret: keys.session_secret, resave: false, saveUninitialized: false }));
 
 // CORS
 app.use(cors({
@@ -32,9 +37,17 @@ app.use(cors({
     credentials: true,
 }));
 
+app.use((req, rex, next) => { 
+    logger.debug(req.headers);
+    next();
+})
+
 // Passport
-app.use(passport.initialize());
-app.use(passport.session());
+const passportInit = passport.initialize();
+app.use(passportInit);
+const passportSession = passport.session();
+app.use(passportSession);
+
 
 // Routes
 app.use('/auth', require('./routes/auth'));
@@ -43,8 +56,10 @@ app.use('/auth', require('./routes/auth'));
 app.use('/', (req, res, next) => {
     if (!req.user)
         res.status(401).json({ message: 'user has not been authenticated'});
-    else
-        next();
+    else {
+		console.log(req._passport.session)
+		next();
+	}
 });
 
 
@@ -56,4 +71,4 @@ app.get('/', (req, res) => { res.send('/') });
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, console.log(`Server started on ${PORT}`));
+app.listen(PORT, () => console.log(`Server listenning on port ${PORT}`));
