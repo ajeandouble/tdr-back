@@ -17,7 +17,7 @@ router.post('/login',
       next();
     },
     passport.authenticate('local', {
-      successRedirect: client_homepage_url,
+      successRedirect: `${client_homepage_url}/dashboard`,
       failureRedirect: client_homepage_url,
       failureFlash: true })
 );
@@ -58,7 +58,7 @@ router.get("/facebook", passport.authenticate("facebook"));
 router.get(
     "/facebook/redirect", (req, __, next) => { console.log('redirect', req.header, req.user, req.users, req.session._passport); next(); },
     passport.authenticate("facebook", {
-        successRedirect: client_homepage_url,
+        successRedirect: `${client_homepage_url}/dashboard`,
         failureRedirect: 'auth/login/failed'
     })
 );
