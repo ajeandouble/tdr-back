@@ -19,15 +19,9 @@ router.get('/userInfo', (req, res) => {
     UserProfileModel.findOne({ user_id: req.user}, (err, obj) => {
         if (!err && obj) {
             obj = obj.toObject();
-            console.log(obj.age)
             const data = {};
-            // data.age = obj.age;
-            // data.displayName = obj.displayName;
-            // data.gender = obj.gender;
-            // data.interrests = obj.interrests;
-            // data.bio = obj.bio;
-            ['age', 'displayName', 'gender', 'interrests', 'bio'].forEach(prop => data[prop] = obj[prop]);
-            console.log(`data=${data}`);
+            ['displayName', 'gender', 'interest', 'bio', 'birthDate', 'pics'].forEach(prop => data[prop] = obj[prop]);
+            console.log(`data=${data} ${JSON.stringify(data)}`);
             res.json({success: true, message: '', data: data});
         }
         else {
