@@ -13,4 +13,5 @@ module.exports = {
     },
     client_homepage_url: process.env.CLIENT_HOMEPAGE_URL,
     cookie_key: 'yes',
+    session_secret: process.env.SESSION_SECRET,
 }
