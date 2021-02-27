@@ -23,12 +23,20 @@ mongoose.connect(db, { useNewUrlParser: true, useUnifiedTopology: true })
 app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: false })); // support encoded bodies
 
+app.set('trust proxy', 1); // For Heroku?
+
 // Session
 app.use(session({
     store: sessionStore,
     secret: keys.session_secret,
     resave: false,
     saveUninitialized: true,
+    cookie: {
+        path: "/",
+        secure: true,
+        domain: ".herokuapp.com",
+        httpOnly: true
+    }
 }));
 
 // CORS
