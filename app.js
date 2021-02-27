@@ -32,8 +32,6 @@ app.use(session({
     secret: keys.session_secret,
     resave: false,
     saveUninitialized: true,
-    proxy: true,
-    cookie: { secure: true }
 }));
 
 // CORS
