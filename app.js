@@ -1,4 +1,3 @@
-
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
@@ -27,7 +26,12 @@ app.use(bodyParser.urlencoded({ extended: false })); // support encoded bodies
 app.enable('trust proxy'); // For Heroku?
 
 // Session
-app.use(session({ store: sessionStore, proxy: true, secret: keys.session_secret, resave: false, saveUninitialized: false }));
+app.use(session({
+    store: sessionStore,
+    proxy: true,
+    secret: keys.session_secret, resave: false,
+    saveUninitialized: false, proxy: true
+}));
 
 // CORS
 app.use(cors({
