@@ -13,7 +13,7 @@ router.get('/test', (req, res) => res.json({'fuck': 'fuck'}));
 
 router.post('/login',
     (req, _, next) => {
-      console.log('redirect', req.header, req.user, req.users, req.session);
+      console.log('aredirect', req.header, req.user, req.users, req.session);
       next();
     },
     passport.authenticate('local', {
