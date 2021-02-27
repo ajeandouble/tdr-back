@@ -5,7 +5,6 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const passport = require('passport');
 const mongoose = require('mongoose');
-const logger = require('logger').createLogger();
 require('dotenv').config()
 const keys = require('./config/keys');
 require('./config/passport')(passport);
@@ -38,7 +37,6 @@ app.use(cors({
 }));
 
 app.use((req, rex, next) => { 
-    logger.debug(req.headers);
     next();
 })
 
