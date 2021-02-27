@@ -34,7 +34,7 @@ app.use(session({
     cookie: {
         path: "/",
         secure: true,
-        domain: ".herokuapp.com",
+        domain: "tdr-front.herokuapp.com",
         httpOnly: true
     }
 }));
