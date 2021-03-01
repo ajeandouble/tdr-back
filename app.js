@@ -9,11 +9,6 @@ const keys = require('./config/keys');
 require('./config/passport')(passport);
 const { session, sessionStore } = require('./config/session');
 
-// Websockets
-require('./chat');
-
-
-
 // DB Config
 const db = require('./config/keys').MongoURI;
 mongoose.connect(db, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -23,20 +18,10 @@ mongoose.connect(db, { useNewUrlParser: true, useUnifiedTopology: true })
 app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: false })); // support encoded bodies
 
-app.set('trust proxy', 1); // For Heroku?
+app.enable('trust proxy'); // For Heroku?
 
 // Session
-app.use(session({
-    store: sessionStore,
-    secret: keys.session_secret,
-    resave: false,
-    saveUninitialized: true,
-    cookie: {
-        path: "/",
-        secure: true,
-        sameSite: "none",
-    }
-}));
+app.use(session({ store: sessionStore, proxy: true, secret: keys.session_secret, resave: false, saveUninitialized: false }));
 
 // CORS
 app.use(cors({
@@ -78,4 +63,80 @@ app.get('/', (req, res) => { res.send('/') });
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => console.log(`Server listenning on port ${PORT}`));
+const server = app.listen(PORT, () => console.log(`Server listenning on port ${PORT}`));
+
+
+// Websockets
+const socketIO = require('ws');
+
+const log = (...args) => {
+    console.log( ...args, );
+}
+
+const wss = new socketIO.Server({ server });
+const wsUser_id = new Map();
+const User_idWs = new Map();
+
+let counter = 0;
+wss.on('connection', function connection(wsConnection, socket) {
+    counter = counter + 1;
+    console.log('connection', counter)
+    const cookie = socket.headers.cookie;
+    const cookieParse = require('cookie').parse;
+    const parsedCookie = cookieParse(cookie);
+    if (parsedCookie) {
+        const sid = parsedCookie['connect.sid'];
+        const uncrypted_sid = require('cookie-parser').signedCookie(sid, keys.session_secret);
+        if (uncrypted_sid) {
+            sessionStore.get(uncrypted_sid, (err, session) => {
+                if (err) throw err
+                else if (session) {
+                    wsUser_id.set (wsConnection, session['passport']['user']);
+                    User_idWs.set(session['passport']['user'], wsConnection)
+                    // console.log(wsConnection)
+                    console.log(`Session for ${wsUser_id.get(wsConnection)}`)
+                }
+            });
+        }
+    }
+    wsConnection.on('close', function close() {
+        console.log(`Closing connection on ${wsUser_id.get(wsConnection)}`)
+        const user_id = wsUser_id.get(wsConnection);
+        wsUser_id.delete(wsConnection);
+        User_idWs.delete(user_id);
+        console.log(`wsUser_id.side=${wsUser_id.size}, ${User_idWs}`);
+    });
+
+    wsConnection.on('message', function incoming(message) {
+        const incoming =  async () => {
+            try {
+                const data =  JSON.parse(message);
+
+                console.log(`incoming message:${data} from ${wsUser_id.get(wsConnection)}`);
+                // dispatch message:
+                console.log(data, data.destination, data['destination'], typeof data, typeof message)
+                if (data.destination) {
+                    console.log(`Attempting to send a msg to ${data.destination}...`)
+                    const dest = User_idWs.get(data.destination);
+                    console.log(dest ? 'dest' : 'nondest')
+                    if (dest) {
+                        console.log('sending', JSON.stringify({ message: data.message, from: data.destination }))
+                        dest.send(JSON.stringify({ message: data.message, from: wsUser_id.get(wsConnection)}));
+                    }
+                }
+            }
+            catch(err) {
+                console.log('Error processing incoming message:', err);
+            }
+        }
+        if (!wsUser_id.get(wsConnection)) {
+            setTimeout(() => incoming(), 500);
+        }
+        else {
+            incoming();
+        }
+    });
+
+});
+
+
