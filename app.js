@@ -22,6 +22,7 @@ app.enable('trust proxy'); // For Heroku?
 
 // Session
 if (process.env.NODE_ENV === 'develop') {
+    console.log('NODE_ENV=', process.env.NODE_ENV);
     app.use(session({ store: sessionStore, proxy: true, secret: keys.session_secret, resave: false, saveUninitialized: false }));
 }
 else {
