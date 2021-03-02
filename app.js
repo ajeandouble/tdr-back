@@ -26,6 +26,7 @@ if (process.env.NODE_ENV === 'develop') {
     app.use(session({ store: sessionStore, proxy: true, secret: keys.session_secret, resave: false, saveUninitialized: false }));
 }
 else {
+    console.log('NODE_ENV=', production);
     app.use(session({
         store: sessionStore,
         secret: keys.session_secret,
