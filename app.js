@@ -76,7 +76,6 @@ const PORT = process.env.PORT || 5000;
 
 const server = app.listen(PORT, () => console.log(`Server listenning on port ${PORT}`));
 
-
 // // Websockets
 // const socketIO = require('ws');
 
@@ -149,5 +148,3 @@ const server = app.listen(PORT, () => console.log(`Server listenning on port ${P
 //     });
 
 // });
-
-
