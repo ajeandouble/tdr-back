@@ -18,7 +18,12 @@ mongoose.connect(db, { useNewUrlParser: true, useUnifiedTopology: true })
 app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: false })); // support encoded bodies
 
-app.set('trust proxy', 1); // For Heroku?
+if (process.env.NODE_ENV === 'development') {
+
+}
+
+else {
+    app.set('trust proxy', 1); // For Heroku?
 
     console.log('NODE_ENV=', process.env.NODE_ENV);
     app.use(session({
@@ -32,7 +37,7 @@ app.set('trust proxy', 1); // For Heroku?
             sameSite: "none",
         }
     }));
-
+}
 
 // CORS
 app.use(cors({
