@@ -18,8 +18,9 @@ mongoose.connect(db, { useNewUrlParser: true, useUnifiedTopology: true })
 app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: false })); // support encoded bodies
 
-if (process.env.NODE_ENV === 'development') {
-
+if (process.env.NODE_ENV === 'develop') {
+    app.enable('trust proxy');
+    app.use(session({ store : sessionStore, secret: keys.session_secret }));
 }
 
 else {

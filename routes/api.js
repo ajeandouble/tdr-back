@@ -35,7 +35,7 @@ router.get('/getDeck', (req, res) => {
     console.log(req.user)
      UserProfileModel.findOne({user_id: req.user}, (err, obj) => {    
         if (err) {
-            res.status(401).json({sucess: false, messages: 'no users profiles left to like', data: null});
+            res.status(204).json({sucess: false, messages: 'no users profiles left to like', data: null});
         }
         const likes = obj.likes;
         
