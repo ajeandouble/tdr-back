@@ -35,14 +35,18 @@ router.get('/getDeck', (req, res) => {
     console.log(req.user)
      UserProfileModel.findOne({user_id: req.user}, (err, obj) => {    
         if (err) {
-            res.status(204).json({sucess: false, messages: 'no users profiles left to like', data: null});
+            res.status(204).json({sucess: false, messages: 'Can\'t get deck', data: null});
+            return ;
         }
         const likes = obj.likes;
+        const pass = obj.pass;
+        console.log('Passed profile=', pass);
+        console.log('Liked profiles=', likes);
         
-        UserProfileModel.find({user_id: { $ne: req.user, $nin: likes }}, (err, obj) => {
-            console.log(err, obj);
+        UserProfileModel.find({$and: [ {user_id: { $ne: req.user } }, { user_id: { $nin: likes } }, { user_id: {$nin: pass }} ]}, (err, obj) => {
+            obj.forEach(user => console.log(user.user_id))
             if (err) {
-                res.status(401).json({sucess: false, messages: 'user profiles not found', data: null});
+                res.status(204).json({sucess: false, messages: 'user profiles not found', data: null});
             } else {
                 res.status(201).json({success: true, message: 'found user profiles', data: obj})
             }
@@ -52,19 +56,45 @@ router.get('/getDeck', (req, res) => {
 
 router.get('/getMatches', async (req, res) => {
     console.log('/getMatches');
+    console.log('/getMatches');
     try {
         const profile = await UserProfileModel.findOne({ user_id: req.user });
         if (!profile) {
             throw new Error('Can\'t find active user profile');
         }
-        const matches = await UserProfileModel.find({user_id: { '$in': profile.matches }});
+        const liked_profiles = await UserProfileModel.find({user_id: { '$in': profile.likes }, likes: { '$in': profile.user_id }});
+        console.log('yo!', liked_profiles.length);
+        res.status(201).json({success: true, message: 'Matches successfully retrieved', data: liked_profiles})
+    }
+    catch (err) {
+        console.log('/getMatches error')
+        const message = err.toString();
+        const response = {success: false, message: message, data: null}
+       res.status(204).json(response);
+    }
+});
 
-        res.status(201).json({success: true, message: 'Matches successfully retrieved', data: matches})
+router.post('/sendPass', async (req, res) => {
+    console.log('/sendPass');
+    try {
+        const profile = await UserProfileModel.findOne({ user_id: req.user });
+        if (!profile) {
+            throw new Error('Can\'t find active user profile');
+        }
+        const pass = new Set(profile['pass']);
+        pass.add(req.body.user_id);
+        console.log(pass)
+        profile['pass'] = Array.from(pass);
+        await profile.save(err => {
+            if (err) throw new Error('Can\'t update active user profile')
+        });
+        res.status(201).json({success: true, message: 'Passed profile saved', data: null});
     }
     catch (err) {
         const message = err.toString();
+        console.log(err)
         const response = {success: false, message: message, data: null}
-       res.status(401).json(response);
+        res.status(204).json(response);
     }
 });
 
@@ -79,37 +109,22 @@ router.post('/sendLike', async (req, res) => {
         likes.add(req.body.user_id);
         console.log(likes)
         profile['likes'] = Array.from(likes);
-        const user_doc = await UserProfileModel.findOne({ user_id: req.body.user_id }, (err) => {
-            if (err) throw new Error('Like user_id doesn\'t exist');
-        });
-        if (!user_doc) {
-            console.log('user_doc doesnt exist')
-            throw new Error('Liked profile doesn`t exist');
-        }
-        if (user_doc.likes.indexOf(req.user) > -1) {
-            console.log(`It's a match between ${user_doc.user_id} and ${req.user}`);
-            console.log(user_doc.matches, profile.matches   )
-            const user_doc_matches = new Set(user_doc.matches);
-            const profile_matches = new Set(profile.matches);
-            user_doc_matches.add(profile.user_id);
-            profile_matches.add(user_doc.user_id);
-            console.log(user_doc_matches, profile_matches)
-            user_doc.matches = Array.from(user_doc_matches);
-            profile.matches = Array.from(profile_matches);
-
-            user_doc.save(err => {
-                if (err) throw new Error('Can\'t update liked profile matches');
-            });
-        }
         profile.save(err => {
             if (err) throw new Error('Can\'t update active user profile')
         });
-        res.status(201).json({success: true, message: 'Like saved', data: null});
+        const likedProfile = await UserProfileModel.findOne({ user_id: req.body.user_id});
+        if (likedProfile.likes.includes(req.user)) {
+            res.status(201).json({success: true, message: 'Match', data: null});
+        }
+        else {
+            res.status(201).json({success: true, message: 'Like saved', data: null});
+        }
     }
-    catch (err) {
+        catch (err) {
         const message = err.toString();
+        console.log(err)
         const response = {success: false, message: message, data: null}
-       res.status(401).json(response);
+        res.status(204).json(response);
     }
 });
 

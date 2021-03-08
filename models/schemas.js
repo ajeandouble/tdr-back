@@ -49,7 +49,7 @@ const UserProfileSchema = new mongoose.Schema({
     likes: {
         type: Array,
     },
-    matches: {
+    pass: {
         type: Array,
     }
 });
