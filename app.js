@@ -93,6 +93,8 @@ const wss = new socketIO.Server({ server });
 const wsUser_id = new Map();
 const User_idWs = new Map();
 
+const { MessageModel } = require('./models/schemas');
+
 let counter = 0;
 wss.on('connection', function connection(wsConnection, socket) {
     counter = counter + 1;
@@ -140,6 +142,13 @@ wss.on('connection', function connection(wsConnection, socket) {
                         dest.send(JSON.stringify({ message: data.message, from: wsUser_id.get(wsConnection)}));
                     }
                 }
+
+                const messageDoc = new MessageModel();
+                messageDoc.from = wsUser_id.get(wsConnection);
+                messageDoc.to = data.destination;
+                messageDoc.message = data.message;
+                messageDoc.save();
+
             }
             catch(err) {
                 console.log('Error processing incoming message:', err);

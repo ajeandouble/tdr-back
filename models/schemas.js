@@ -54,9 +54,26 @@ const UserProfileSchema = new mongoose.Schema({
     }
 });
 
+const MessageSchema = new mongoose.Schema({
+    from: {
+        type: String
+    },
+    to: {
+        type: String
+    },
+    message: {
+        type: String
+    },
+    date: {
+        type: Date,
+        default: Date.now
+    }
+})
+
 const schemas = {
     UserModel: mongoose.model('User', UserSchema, 'users'),
     UserProfileModel: mongoose.model('UserProfile', UserProfileSchema, 'users.profiles'),
+    MessageModel: mongoose.model('Message', MessageSchema, 'messages'),
 }
 
 module.exports = schemas;

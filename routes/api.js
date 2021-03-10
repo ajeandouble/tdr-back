@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
-const { UserProfileModel } = require('../models/schemas');
+const { UserProfileModel, MessageModel } = require('../models/schemas');
 
 router.post('/setActiveUserProfile', (req, res) => {
     console.log(`Setting ${req.user} (active user) profile with: ${req.body}`);
@@ -20,7 +20,7 @@ router.get('/userInfo', (req, res) => {
         if (!err && obj) {
             obj = obj.toObject();
             const data = {};
-            ['displayName', 'gender', 'interest', 'bio', 'birthDate', 'pics'].forEach(prop => data[prop] = obj[prop]);
+            ['user_id', 'displayName', 'gender', 'interest', 'bio', 'birthDate', 'pics'].forEach(prop => data[prop] = obj[prop]);
             console.log(`data=${data} ${JSON.stringify(data)}`);
             res.json({success: true, message: '', data: data});
         }
@@ -42,7 +42,7 @@ router.get('/getDeck', (req, res) => {
         const pass = obj.pass;
         console.log('Passed profile=', pass);
         console.log('Liked profiles=', likes);
-        
+
         UserProfileModel.find({$and: [ {user_id: { $ne: req.user } }, { user_id: { $nin: likes } }, { user_id: {$nin: pass }} ]}, (err, obj) => {
             obj.forEach(user => console.log(user.user_id))
             if (err) {
@@ -125,6 +125,22 @@ router.post('/sendLike', async (req, res) => {
         console.log(err)
         const response = {success: false, message: message, data: null}
         res.status(204).json(response);
+    }
+});
+
+router.get('/fetchMessages', async (req, res) => {
+    console.log('/fetchMessages');
+    try {
+        const messages = await MessageModel.find({$or: [ {from: req.user}, {to: req.user}]});
+        if (messages.length) {
+            res.status(201).json({success: true, message: 'Messages retreived', data: messages})
+        }
+        else {
+
+        }
+    }
+    catch (err) {
+        res.status(401).json({success: false, message: err.toString(), data: null});
     }
 });
 
